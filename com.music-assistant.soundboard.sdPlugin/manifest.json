@@ -1,0 +1,125 @@
+{
+  "Name": "Dynamic Soundboard",
+  "Version": "1.0.0",
+  "Author": "Music Assistant",
+  "Description": "A dynamic soundboard that automatically loads sounds from folders",
+  "Category": "Sound",
+  "CategoryIcon": "imgs/category",
+  "Icon": "imgs/plugin",
+  "CodePath": "plugin.js",
+  "URL": "",
+  "SDKVersion": 2,
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.15"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.0"
+  },
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
+  },
+  "Actions": [
+    {
+      "UUID": "com.music-assistant.soundboard.slot",
+      "Name": "Sound Slot",
+      "Tooltip": "Dynamic slot for sounds or categories",
+      "Icon": "imgs/actions/slot",
+      "States": [
+        {
+          "Image": "imgs/actions/slot",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "ui/slot-pi.html"
+    },
+    {
+      "UUID": "com.music-assistant.soundboard.nav-back",
+      "Name": "Back",
+      "Tooltip": "Go back to categories",
+      "Icon": "imgs/actions/back",
+      "States": [
+        {
+          "Image": "imgs/actions/back",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "UUID": "com.music-assistant.soundboard.nav-prev",
+      "Name": "Previous Page",
+      "Tooltip": "Go to previous page",
+      "Icon": "imgs/actions/prev",
+      "States": [
+        {
+          "Image": "imgs/actions/prev",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "UUID": "com.music-assistant.soundboard.nav-next",
+      "Name": "Next Page",
+      "Tooltip": "Go to next page",
+      "Icon": "imgs/actions/next",
+      "States": [
+        {
+          "Image": "imgs/actions/next",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad"]
+    },
+    {
+      "UUID": "com.music-assistant.soundboard.volume",
+      "Name": "Volume",
+      "Tooltip": "Adjust global volume",
+      "Icon": "imgs/actions/volume",
+      "States": [
+        {
+          "Image": "imgs/actions/volume",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad", "Encoder"],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Adjust volume",
+          "Push": "Mute/Unmute"
+        }
+      },
+      "PropertyInspectorPath": "ui/volume-pi.html"
+    },
+    {
+      "UUID": "com.music-assistant.soundboard.stop-all",
+      "Name": "Stop All",
+      "Tooltip": "Stop all playing sounds",
+      "Icon": "imgs/actions/stop",
+      "States": [
+        {
+          "Image": "imgs/actions/stop",
+          "TitleAlignment": "middle",
+          "ShowTitle": false
+        }
+      ],
+      "Controllers": ["Keypad"]
+    }
+  ],
+  "UUID": "com.music-assistant.soundboard"
+}

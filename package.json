@@ -1,0 +1,28 @@
+{
+  "name": "com.music-assistant.soundboard",
+  "version": "1.0.0",
+  "description": "Dynamic soundboard plugin for Stream Deck",
+  "main": "dist/plugin.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && cp -r dist/* com.music-assistant.soundboard.sdPlugin/",
+    "watch": "tsc -w",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "streamdeck",
+    "soundboard",
+    "audio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@elgato/streamdeck": "^2.0.1",
+    "@elgato/utils": "^0.4.1",
+    "chokidar": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sound Slot Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      color: #9b9b9b;
+      background-color: #2d2d2d;
+      margin: 0;
+      padding: 10px;
+    }
+    .sdpi-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sdpi-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .sdpi-item-label {
+      font-weight: 500;
+      color: #d8d8d8;
+      font-size: 11px;
+    }
+    input[type="number"], input[type="text"] {
+      background-color: #3b3b3b;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #d8d8d8;
+      padding: 6px 8px;
+      box-sizing: border-box;
+    }
+    input[type="number"] { width: 80px; }
+    input[type="text"] { width: 100%; }
+    input:focus, select:focus { outline: none; border-color: #0078d7; }
+    select {
+      width: 100%;
+      background-color: #3b3b3b;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #d8d8d8;
+      padding: 6px 8px;
+    }
+    .hint {
+      font-size: 10px;
+      color: #7b7b7b;
+      margin-top: 2px;
+    }
+
+    /* Collapsible sections */
+    details {
+      background-color: #383838;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    details[open] {
+      padding-bottom: 10px;
+    }
+    summary {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #d8d8d8;
+      font-size: 12px;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+      content: ">";
+      font-size: 10px;
+      transition: transform 0.2s;
+      color: #7b7b7b;
+    }
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .details-content {
+      padding: 0 12px;
+    }
+
+    /* Slot info */
+    .slot-info {
+      background-color: #383838;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+    .slot-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .slot-info-label { color: #7b7b7b; }
+    .slot-info-value { color: #d8d8d8; font-weight: 500; }
+    .slot-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .slot-type.category { background-color: #74b9ff33; color: #74b9ff; }
+    .slot-type.sound { background-color: #0984e333; color: #74b9ff; }
+    .slot-type.empty { background-color: #636e7233; color: #636e72; }
+    .slot-type.favorite { background-color: #fdcb6e33; color: #fdcb6e; }
+
+    /* Icon upload */
+    .icon-upload-area {
+      border: 2px dashed #4a4a4a;
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .icon-upload-area:hover {
+      border-color: #0078d7;
+      background-color: #3b3b3b;
+    }
+    .icon-upload-area.dragover {
+      border-color: #0078d7;
+      background-color: #0078d722;
+    }
+    .icon-preview {
+      max-width: 60px;
+      max-height: 60px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+    .icon-upload-text {
+      color: #7b7b7b;
+      font-size: 10px;
+    }
+    input[type="file"] { display: none; }
+
+    /* Buttons */
+    .btn {
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .btn:hover { background-color: #006cc1; }
+    .btn-secondary { background-color: #4a4a4a; }
+    .btn-secondary:hover { background-color: #5a5a5a; }
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 10px;
+    }
+    .btn-danger {
+      background-color: #e74c3c;
+    }
+    .btn-danger:hover {
+      background-color: #c0392b;
+    }
+
+    /* Volume slider styling */
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .volume-value {
+      min-width: 35px;
+      text-align: right;
+      font-size: 11px;
+      color: #d8d8d8;
+    }
+  </style>
+</head>
+<body>
+  <div class="sdpi-wrapper">
+    <!-- Current Slot Info -->
+    <div class="slot-info" id="slotInfoContainer">
+      <div class="slot-info-row">
+        <span class="slot-info-label">Type:</span>
+        <span class="slot-type empty" id="slotType">Vide</span>
+      </div>
+      <div class="slot-info-row" id="slotNameRow">
+        <span class="slot-info-label">Nom:</span>
+        <span class="slot-info-value" id="slotName">-</span>
+      </div>
+    </div>
+
+    <!-- Sound/Category Customization -->
+    <details id="customizationSection" open style="display: none;">
+      <summary>Personnalisation</summary>
+      <div class="details-content">
+        <!-- Custom Title -->
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Titre personnalise</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="customTitle" placeholder="Nom par defaut" style="flex: 1;">
+            <button class="btn btn-small" id="saveTitleBtn">OK</button>
+          </div>
+        </div>
+
+        <!-- Sound Volume (only for sounds) -->
+        <div class="sdpi-item" id="soundVolumeSection" style="display: none;">
+          <label class="sdpi-item-label">Volume du son</label>
+          <div class="volume-row">
+            <input type="range" id="soundVolume" min="0" max="200" value="100" style="flex: 1;">
+            <span class="volume-value" id="soundVolumeDisplay">100%</span>
+          </div>
+          <div class="hint">Volume relatif (0-200%)</div>
+        </div>
+
+        <!-- Delete Sound (only for sounds) -->
+        <div class="sdpi-item" id="deleteSoundSection" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #4a4a4a;">
+          <label class="sdpi-item-label">Zone dangereuse</label>
+          <button class="btn btn-danger" id="deleteSoundBtn" style="width: 100%;">Supprimer le son</button>
+          <div class="hint">Supprime le son, son icone et ses parametres</div>
+        </div>
+
+        <!-- Custom Icon -->
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Icone personnalisee</label>
+          <div class="icon-upload-area" id="iconUploadArea">
+            <img id="iconPreview" class="icon-preview" style="display: none;">
+            <div class="icon-upload-text" id="iconUploadText">
+              Glisser une image ou cliquer<br><small>Ctrl+V pour coller</small>
+            </div>
+          </div>
+          <input type="file" id="iconFileInput" accept="image/*">
+        </div>
+      </div>
+    </details>
+
+    <!-- Title Style (per slot) - only when custom icon -->
+    <details id="titleStyleSection" style="display: none;">
+      <summary>Style du titre</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Afficher</label>
+          <select id="slotTitleShow">
+            <option value="">Par defaut</option>
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Position</label>
+          <select id="slotTitlePosition">
+            <option value="">Par defaut</option>
+            <option value="top">Haut</option>
+            <option value="center">Centre</option>
+            <option value="bottom">Bas</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Couleur</label>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <input type="color" id="slotTitleColor" value="#ffffff" style="width: 40px; height: 26px; padding: 0; border: none;">
+            <button class="btn btn-secondary btn-small" id="resetSlotTitleColor">Reset</button>
+          </div>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Taille</label>
+          <div class="volume-row">
+            <input type="range" id="slotTitleFontSize" min="10" max="24" value="16" style="flex: 1;">
+            <span class="volume-value" id="slotTitleFontSizeDisplay">16</span>
+          </div>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Fond</label>
+          <select id="slotTitleBackground">
+            <option value="">Par defaut</option>
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+        <button class="btn" id="saveSlotTitleStyle" style="width: 100%; margin-top: 8px;">Appliquer</button>
+      </div>
+    </details>
+
+    <!-- Import Sound from URL -->
+    <details id="importSoundSection" style="display: none;">
+      <summary>Importer un son</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">URL du son</label>
+          <input type="text" id="soundUrl" placeholder="https://exemple.com/son.mp3">
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Nom du fichier</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="soundFilename" placeholder="mon-son" style="flex: 1;">
+            <select id="soundExtension" style="width: 80px;">
+              <option value=".mp3">.mp3</option>
+              <option value=".wav">.wav</option>
+              <option value=".ogg">.ogg</option>
+              <option value=".m4a">.m4a</option>
+              <option value=".flac">.flac</option>
+            </select>
+          </div>
+          <div class="hint">Laisser vide pour utiliser le nom du fichier distant</div>
+        </div>
+        <button class="btn" id="importSoundBtn" style="width: 100%;">Telecharger et importer</button>
+        <div id="importStatus" class="hint" style="margin-top: 8px; text-align: center;"></div>
+      </div>
+    </details>
+
+    <!-- Slot Configuration -->
+    <details>
+      <summary>Configuration du Slot</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Index du Slot</label>
+          <input type="number" id="slotIndex" min="0" max="26" value="0">
+          <div class="hint">Position (0-26)</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Global Settings -->
+    <details>
+      <summary>Parametres Globaux</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Dossier Racine</label>
+          <input type="text" id="rootFolder" placeholder="C:\Sounds">
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Peripherique Audio</label>
+          <select id="audioDevice">
+            <option value="default">Peripherique par defaut</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Volume Global</label>
+          <div class="volume-row">
+            <input type="range" id="globalVolume" min="0" max="100" value="100" style="flex: 1;">
+            <span class="volume-value" id="volumeDisplay">100%</span>
+          </div>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Ordre de tri</label>
+          <select id="sortOrder">
+            <option value="name-asc">Nom (A-Z)</option>
+            <option value="name-desc">Nom (Z-A)</option>
+            <option value="date-desc">Date (recent d'abord)</option>
+            <option value="date-asc">Date (ancien d'abord)</option>
+          </select>
+        </div>
+      </div>
+    </details>
+
+    <!-- Folder Border Style -->
+    <details>
+      <summary>Liseré des dossiers</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Activer</label>
+          <select id="folderBorderEnabled">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Couleur</label>
+          <input type="color" id="folderBorderColor" value="#74b9ff" style="width: 40px; height: 26px; padding: 0; border: none;">
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Opacite</label>
+          <div class="volume-row">
+            <input type="range" id="folderBorderOpacity" min="10" max="100" value="90" style="flex: 1;">
+            <span class="volume-value" id="folderBorderOpacityDisplay">90%</span>
+          </div>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Epaisseur</label>
+          <div class="volume-row">
+            <input type="range" id="folderBorderSize" min="1" max="10" value="4" style="flex: 1;">
+            <span class="volume-value" id="folderBorderSizeDisplay">4px</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Global Title Style -->
+    <details>
+      <summary>Style du titre (global)</summary>
+      <div class="details-content">
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Afficher</label>
+          <select id="globalTitleShow">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Position</label>
+          <select id="globalTitlePosition">
+            <option value="top">Haut</option>
+            <option value="center">Centre</option>
+            <option value="bottom" selected>Bas</option>
+          </select>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Couleur</label>
+          <input type="color" id="globalTitleColor" value="#ffffff" style="width: 40px; height: 26px; padding: 0; border: none;">
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Taille</label>
+          <div class="volume-row">
+            <input type="range" id="globalTitleFontSize" min="10" max="24" value="16" style="flex: 1;">
+            <span class="volume-value" id="globalTitleFontSizeDisplay">16</span>
+          </div>
+        </div>
+        <div class="sdpi-item">
+          <label class="sdpi-item-label">Fond</label>
+          <select id="globalTitleBackground">
+            <option value="true">Oui</option>
+            <option value="false">Non</option>
+          </select>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <script>
+    let websocket = null;
+    let uuid = null;
+    let actionInfo = null;
+    let currentSlotInfo = null;
+
+    function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo, inActionInfo) {
+      uuid = inPluginUUID;
+      actionInfo = JSON.parse(inActionInfo);
+      websocket = new WebSocket(`ws://127.0.0.1:${inPort}`);
+
+      websocket.onopen = function() {
+        websocket.send(JSON.stringify({ event: inRegisterEvent, uuid: inPluginUUID }));
+        websocket.send(JSON.stringify({ event: "getSettings", context: uuid }));
+        websocket.send(JSON.stringify({ event: "getGlobalSettings", context: uuid }));
+        websocket.send(JSON.stringify({
+          event: "sendToPlugin", context: uuid, action: actionInfo.action,
+          payload: { action: "getSlotInfo" }
+        }));
+        websocket.send(JSON.stringify({
+          event: "sendToPlugin", context: uuid, action: actionInfo.action,
+          payload: { action: "getAudioDevices" }
+        }));
+      };
+
+      websocket.onmessage = function(evt) {
+        const data = JSON.parse(evt.data);
+
+        if (data.event === "didReceiveSettings") {
+          document.getElementById("slotIndex").value = data.payload.settings?.slotIndex || 0;
+        }
+
+        if (data.event === "didReceiveGlobalSettings") {
+          const s = data.payload.settings || {};
+          document.getElementById("rootFolder").value = s.rootFolder || "";
+          document.getElementById("audioDevice").value = s.audioDevice || "default";
+          document.getElementById("globalVolume").value = (s.globalVolume || 1) * 100;
+          document.getElementById("volumeDisplay").textContent = Math.round((s.globalVolume || 1) * 100) + "%";
+
+          const ts = s.defaultTitleStyle || {};
+          document.getElementById("globalTitleShow").value = ts.show !== false ? "true" : "false";
+          document.getElementById("globalTitlePosition").value = ts.position || "bottom";
+          document.getElementById("globalTitleColor").value = ts.color || "#ffffff";
+          document.getElementById("globalTitleFontSize").value = ts.fontSize || 16;
+          document.getElementById("globalTitleFontSizeDisplay").textContent = ts.fontSize || 16;
+          document.getElementById("globalTitleBackground").value = ts.background !== false ? "true" : "false";
+
+          // Folder border settings
+          const fb = s.folderBorder || {};
+          document.getElementById("folderBorderEnabled").value = fb.enabled !== false ? "true" : "false";
+          document.getElementById("folderBorderColor").value = fb.color || "#74b9ff";
+          document.getElementById("folderBorderOpacity").value = Math.round((fb.opacity ?? 0.9) * 100);
+          document.getElementById("folderBorderOpacityDisplay").textContent = Math.round((fb.opacity ?? 0.9) * 100) + "%";
+          document.getElementById("folderBorderSize").value = fb.size || 4;
+          document.getElementById("folderBorderSizeDisplay").textContent = (fb.size || 4) + "px";
+
+          // Sort order
+          document.getElementById("sortOrder").value = s.sortOrder || "name-asc";
+        }
+
+        if (data.event === "sendToPropertyInspector") {
+          if (data.payload.event === "audioDevices") {
+            populateAudioDevices(data.payload.devices);
+          } else if (data.payload.event === "importResult") {
+            handleImportResult(data.payload);
+          } else if (data.payload.event === "deleteResult") {
+            handleDeleteResult(data.payload);
+          } else {
+            updateSlotInfo(data.payload);
+          }
+        }
+      };
+    }
+
+    function handleDeleteResult(result) {
+      const btn = document.getElementById("deleteSoundBtn");
+      if (result.success) {
+        btn.textContent = "Supprime !";
+        btn.style.backgroundColor = "#00b894";
+        setTimeout(() => {
+          btn.textContent = "Supprimer le son";
+          btn.style.backgroundColor = "";
+          btn.disabled = false;
+          // Refresh slot info
+          websocket.send(JSON.stringify({
+            event: "sendToPlugin", context: uuid, action: actionInfo.action,
+            payload: { action: "getSlotInfo" }
+          }));
+        }, 1500);
+      } else {
+        btn.textContent = "Erreur !";
+        setTimeout(() => {
+          btn.textContent = "Supprimer le son";
+          btn.disabled = false;
+        }, 2000);
+      }
+    }
+
+    function handleImportResult(result) {
+      const statusEl = document.getElementById("importStatus");
+      const btn = document.getElementById("importSoundBtn");
+
+      if (result.success) {
+        statusEl.style.color = "#00b894";
+        statusEl.textContent = "Importe: " + result.filename;
+      } else {
+        statusEl.style.color = "#e17055";
+        statusEl.textContent = "Erreur: " + (result.error || "Echec");
+      }
+
+      btn.disabled = false;
+      setTimeout(() => {
+        statusEl.textContent = "";
+        statusEl.style.color = "";
+      }, 5000);
+    }
+
+    function populateAudioDevices(devices) {
+      const select = document.getElementById("audioDevice");
+      const currentValue = select.value;
+      select.innerHTML = "";
+      devices.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = d.name;
+        select.appendChild(opt);
+      });
+      if (currentValue) select.value = currentValue;
+    }
+
+    function updateSlotInfo(info) {
+      currentSlotInfo = info;
+      const typeEl = document.getElementById("slotType");
+      const nameEl = document.getElementById("slotName");
+      const customSection = document.getElementById("customizationSection");
+      const titleStyleSection = document.getElementById("titleStyleSection");
+      const soundVolumeSection = document.getElementById("soundVolumeSection");
+      const importSoundSection = document.getElementById("importSoundSection");
+
+      typeEl.className = "slot-type " + info.type;
+      typeEl.textContent = { "category": "Categorie", "sound": "Son", "empty": "Vide", "favorite-category": "Favoris" }[info.type] || info.type;
+      nameEl.textContent = info.name || "-";
+
+      // Show import section when in category view (has a category path to import to)
+      if (info.currentCategory || info.type === "category" || info.type === "sound" || info.type === "empty") {
+        importSoundSection.style.display = "block";
+        // Open by default if slot is empty
+        if (info.type === "empty") {
+          importSoundSection.open = true;
+        }
+      } else {
+        importSoundSection.style.display = "none";
+      }
+
+      const deleteSoundSection = document.getElementById("deleteSoundSection");
+
+      if (info.type === "category" || info.type === "sound") {
+        customSection.style.display = "block";
+        document.getElementById("customTitle").value = info.customTitle || "";
+        document.getElementById("customTitle").placeholder = info.originalName || "Nom par defaut";
+
+        // Sound volume and delete section
+        if (info.type === "sound") {
+          soundVolumeSection.style.display = "block";
+          deleteSoundSection.style.display = "block";
+          const vol = Math.round((info.volume || 1) * 100);
+          document.getElementById("soundVolume").value = vol;
+          document.getElementById("soundVolumeDisplay").textContent = vol + "%";
+        } else {
+          soundVolumeSection.style.display = "none";
+          deleteSoundSection.style.display = "none";
+        }
+
+        // Title style section
+        if (info.hasCustomIcon) {
+          document.getElementById("iconUploadText").innerHTML = "Icone definie<br><small>Glisser pour remplacer</small>";
+          titleStyleSection.style.display = "block";
+          const ts = info.titleStyle || {};
+          document.getElementById("slotTitleShow").value = ts.show !== undefined ? String(ts.show) : "";
+          document.getElementById("slotTitlePosition").value = ts.position || "";
+          document.getElementById("slotTitleColor").value = ts.color || "#ffffff";
+          document.getElementById("slotTitleFontSize").value = ts.fontSize || 16;
+          document.getElementById("slotTitleFontSizeDisplay").textContent = ts.fontSize || 16;
+          document.getElementById("slotTitleBackground").value = ts.background !== undefined ? String(ts.background) : "";
+        } else {
+          document.getElementById("iconUploadText").innerHTML = "Glisser une image ou cliquer<br><small>Ctrl+V pour coller</small>";
+          titleStyleSection.style.display = "none";
+        }
+      } else {
+        customSection.style.display = "none";
+        titleStyleSection.style.display = "none";
+        deleteSoundSection.style.display = "none";
+      }
+    }
+
+    // Slot index
+    document.getElementById("slotIndex").addEventListener("change", function() {
+      websocket.send(JSON.stringify({
+        event: "setSettings", context: uuid,
+        payload: { slotIndex: parseInt(this.value, 10) }
+      }));
+      setTimeout(() => {
+        websocket.send(JSON.stringify({
+          event: "sendToPlugin", context: uuid, action: actionInfo.action,
+          payload: { action: "getSlotInfo" }
+        }));
+      }, 100);
+    });
+
+    // Global settings
+    function saveGlobalSettings() {
+      websocket.send(JSON.stringify({
+        event: "setGlobalSettings", context: uuid,
+        payload: {
+          rootFolder: document.getElementById("rootFolder").value,
+          audioDevice: document.getElementById("audioDevice").value,
+          globalVolume: parseInt(document.getElementById("globalVolume").value, 10) / 100,
+          sortOrder: document.getElementById("sortOrder").value
+        }
+      }));
+    }
+    document.getElementById("rootFolder").addEventListener("change", saveGlobalSettings);
+    document.getElementById("audioDevice").addEventListener("change", saveGlobalSettings);
+    document.getElementById("globalVolume").addEventListener("input", function() {
+      document.getElementById("volumeDisplay").textContent = this.value + "%";
+    });
+    document.getElementById("globalVolume").addEventListener("change", saveGlobalSettings);
+    document.getElementById("sortOrder").addEventListener("change", saveGlobalSettings);
+
+    // Custom title
+    document.getElementById("saveTitleBtn").addEventListener("click", function() {
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: { action: "setCustomTitle", customTitle: document.getElementById("customTitle").value.trim() }
+      }));
+      this.textContent = "OK!";
+      setTimeout(() => this.textContent = "OK", 1000);
+    });
+    document.getElementById("customTitle").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") document.getElementById("saveTitleBtn").click();
+    });
+
+    // Delete sound
+    document.getElementById("deleteSoundBtn").addEventListener("click", function() {
+      if (!currentSlotInfo || currentSlotInfo.type !== "sound") return;
+
+      const soundName = currentSlotInfo.name || "ce son";
+      if (!confirm("Supprimer \"" + soundName + "\" ?\n\nCette action est irreversible.")) {
+        return;
+      }
+
+      this.disabled = true;
+      this.textContent = "Suppression...";
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: { action: "deleteSound" }
+      }));
+    });
+
+    // Sound volume
+    document.getElementById("soundVolume").addEventListener("input", function() {
+      document.getElementById("soundVolumeDisplay").textContent = this.value + "%";
+    });
+    document.getElementById("soundVolume").addEventListener("change", function() {
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: { action: "setSoundVolume", volume: parseInt(this.value, 10) / 100 }
+      }));
+    });
+
+    // Icon upload
+    const uploadArea = document.getElementById("iconUploadArea");
+    const fileInput = document.getElementById("iconFileInput");
+    const iconPreview = document.getElementById("iconPreview");
+
+    uploadArea.addEventListener("click", () => fileInput.click());
+    uploadArea.addEventListener("dragover", (e) => { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+
+    uploadArea.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith("image/")) {
+        handleImageFile(files[0]);
+        return;
+      }
+
+      const html = e.dataTransfer.getData("text/html");
+      const text = e.dataTransfer.getData("text/plain");
+      let imageUrl = null;
+
+      if (html) {
+        const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (match) imageUrl = match[1];
+      }
+      if (!imageUrl && text && (text.startsWith("http://") || text.startsWith("https://"))) {
+        imageUrl = text;
+      }
+
+      if (imageUrl) {
+        document.getElementById("iconUploadText").innerHTML = "<small>Telechargement...</small>";
+        try {
+          await fetchAndHandleImageUrl(imageUrl);
+        } catch (err) {
+          websocket.send(JSON.stringify({
+            event: "sendToPlugin", context: uuid, action: actionInfo.action,
+            payload: { action: "setCustomIconFromUrl", iconUrl: imageUrl }
+          }));
+          setTimeout(() => {
+            document.getElementById("iconUploadText").innerHTML = "Icone definie<br><small>Glisser pour remplacer</small>";
+          }, 1500);
+        }
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) handleImageFile(e.target.files[0]);
+    });
+
+    document.addEventListener("paste", (e) => {
+      for (let item of e.clipboardData.items) {
+        if (item.type.startsWith("image/")) {
+          handleImageFile(item.getAsFile());
+          break;
+        }
+      }
+    });
+
+    async function fetchAndHandleImageUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed");
+      const blob = await response.blob();
+      if (!blob.type.startsWith("image/")) throw new Error("Not image");
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          sendIconData(e.target.result);
+          resolve();
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => sendIconData(e.target.result);
+      reader.readAsDataURL(file);
+    }
+
+    function sendIconData(imageData) {
+      iconPreview.src = imageData;
+      iconPreview.style.display = "block";
+      document.getElementById("iconUploadText").innerHTML = "<small>Envoi...</small>";
+
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: { action: "setCustomIcon", iconData: imageData }
+      }));
+
+      setTimeout(() => {
+        document.getElementById("iconUploadText").innerHTML = "Icone definie<br><small>Glisser pour remplacer</small>";
+      }, 1000);
+    }
+
+    // Font size sliders
+    document.getElementById("slotTitleFontSize").addEventListener("input", function() {
+      document.getElementById("slotTitleFontSizeDisplay").textContent = this.value;
+    });
+    document.getElementById("globalTitleFontSize").addEventListener("input", function() {
+      document.getElementById("globalTitleFontSizeDisplay").textContent = this.value;
+    });
+
+    // Per-slot title style
+    document.getElementById("saveSlotTitleStyle").addEventListener("click", function() {
+      const ts = {};
+      const show = document.getElementById("slotTitleShow").value;
+      if (show !== "") ts.show = show === "true";
+      const pos = document.getElementById("slotTitlePosition").value;
+      if (pos !== "") ts.position = pos;
+      ts.color = document.getElementById("slotTitleColor").value;
+      ts.fontSize = parseInt(document.getElementById("slotTitleFontSize").value, 10);
+      const bg = document.getElementById("slotTitleBackground").value;
+      if (bg !== "") ts.background = bg === "true";
+
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: { action: "setTitleStyle", titleStyle: ts }
+      }));
+      this.textContent = "OK!";
+      setTimeout(() => this.textContent = "Appliquer", 1000);
+    });
+
+    document.getElementById("resetSlotTitleColor").addEventListener("click", function() {
+      document.getElementById("slotTitleColor").value = "#ffffff";
+    });
+
+    // Import sound from URL
+    document.getElementById("importSoundBtn").addEventListener("click", function() {
+      const url = document.getElementById("soundUrl").value.trim();
+      if (!url) {
+        document.getElementById("importStatus").textContent = "Entrez une URL";
+        return;
+      }
+
+      const filename = document.getElementById("soundFilename").value.trim();
+      const extension = document.getElementById("soundExtension").value;
+
+      document.getElementById("importStatus").textContent = "Telechargement en cours...";
+      this.disabled = true;
+
+      websocket.send(JSON.stringify({
+        event: "sendToPlugin", context: uuid, action: actionInfo.action,
+        payload: {
+          action: "importSoundFromUrl",
+          url: url,
+          filename: filename,
+          extension: extension
+        }
+      }));
+
+      // Reset after a delay
+      setTimeout(() => {
+        this.disabled = false;
+        document.getElementById("soundUrl").value = "";
+        document.getElementById("soundFilename").value = "";
+      }, 3000);
+    });
+
+    // Auto-detect extension from URL
+    document.getElementById("soundUrl").addEventListener("change", function() {
+      const url = this.value.trim();
+      if (url) {
+        const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+        const validExts = ["mp3", "wav", "ogg", "m4a", "flac", "aac"];
+        if (ext && validExts.includes(ext)) {
+          document.getElementById("soundExtension").value = "." + ext;
+        }
+
+        // Try to extract filename from URL
+        const urlParts = url.split("?")[0].split("/");
+        const lastPart = urlParts[urlParts.length - 1];
+        if (lastPart) {
+          const nameWithoutExt = lastPart.replace(/\.[^/.]+$/, "");
+          if (nameWithoutExt && !document.getElementById("soundFilename").value) {
+            document.getElementById("soundFilename").value = decodeURIComponent(nameWithoutExt);
+          }
+        }
+      }
+    });
+
+    // Global title style
+    function saveGlobalTitleStyle() {
+      websocket.send(JSON.stringify({
+        event: "setGlobalSettings", context: uuid,
+        payload: {
+          rootFolder: document.getElementById("rootFolder").value,
+          audioDevice: document.getElementById("audioDevice").value,
+          globalVolume: parseInt(document.getElementById("globalVolume").value, 10) / 100,
+          defaultTitleStyle: {
+            show: document.getElementById("globalTitleShow").value === "true",
+            position: document.getElementById("globalTitlePosition").value,
+            color: document.getElementById("globalTitleColor").value,
+            fontSize: parseInt(document.getElementById("globalTitleFontSize").value, 10),
+            background: document.getElementById("globalTitleBackground").value === "true"
+          }
+        }
+      }));
+    }
+    document.getElementById("globalTitleShow").addEventListener("change", saveGlobalTitleStyle);
+    document.getElementById("globalTitlePosition").addEventListener("change", saveGlobalTitleStyle);
+    document.getElementById("globalTitleColor").addEventListener("change", saveGlobalTitleStyle);
+    document.getElementById("globalTitleFontSize").addEventListener("change", saveGlobalTitleStyle);
+    document.getElementById("globalTitleBackground").addEventListener("change", saveGlobalTitleStyle);
+
+    // Folder border settings
+    function saveFolderBorderSettings() {
+      websocket.send(JSON.stringify({
+        event: "setGlobalSettings", context: uuid,
+        payload: {
+          rootFolder: document.getElementById("rootFolder").value,
+          audioDevice: document.getElementById("audioDevice").value,
+          globalVolume: parseInt(document.getElementById("globalVolume").value, 10) / 100,
+          defaultTitleStyle: {
+            show: document.getElementById("globalTitleShow").value === "true",
+            position: document.getElementById("globalTitlePosition").value,
+            color: document.getElementById("globalTitleColor").value,
+            fontSize: parseInt(document.getElementById("globalTitleFontSize").value, 10),
+            background: document.getElementById("globalTitleBackground").value === "true"
+          },
+          folderBorder: {
+            enabled: document.getElementById("folderBorderEnabled").value === "true",
+            color: document.getElementById("folderBorderColor").value,
+            opacity: parseInt(document.getElementById("folderBorderOpacity").value, 10) / 100,
+            size: parseInt(document.getElementById("folderBorderSize").value, 10)
+          }
+        }
+      }));
+    }
+
+    document.getElementById("folderBorderEnabled").addEventListener("change", saveFolderBorderSettings);
+    document.getElementById("folderBorderColor").addEventListener("change", saveFolderBorderSettings);
+    document.getElementById("folderBorderOpacity").addEventListener("input", function() {
+      document.getElementById("folderBorderOpacityDisplay").textContent = this.value + "%";
+    });
+    document.getElementById("folderBorderOpacity").addEventListener("change", saveFolderBorderSettings);
+    document.getElementById("folderBorderSize").addEventListener("input", function() {
+      document.getElementById("folderBorderSizeDisplay").textContent = this.value + "px";
+    });
+    document.getElementById("folderBorderSize").addEventListener("change", saveFolderBorderSettings);
+  </script>
+</body>
+</html>
