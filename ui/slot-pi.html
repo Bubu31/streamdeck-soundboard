@@ -436,6 +436,7 @@
     let uuid = null;
     let actionInfo = null;
     let currentSlotInfo = null;
+    let pendingAudioDevice = null;
 
     function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo, inActionInfo) {
       uuid = inPluginUUID;
@@ -466,7 +467,8 @@
         if (data.event === "didReceiveGlobalSettings") {
           const s = data.payload.settings || {};
           document.getElementById("rootFolder").value = s.rootFolder || "";
-          document.getElementById("audioDevice").value = s.audioDevice || "default";
+          pendingAudioDevice = s.audioDevice || "default";
+          document.getElementById("audioDevice").value = pendingAudioDevice;
           document.getElementById("globalVolume").value = (s.globalVolume || 1) * 100;
           document.getElementById("volumeDisplay").textContent = Math.round((s.globalVolume || 1) * 100) + "%";
 
@@ -550,7 +552,6 @@
 
     function populateAudioDevices(devices) {
       const select = document.getElementById("audioDevice");
-      const currentValue = select.value;
       select.innerHTML = "";
       devices.forEach(d => {
         const opt = document.createElement("option");
@@ -558,7 +559,9 @@
         opt.textContent = d.name;
         select.appendChild(opt);
       });
-      if (currentValue) select.value = currentValue;
+      // Restore from global settings (pendingAudioDevice) if set, otherwise keep current
+      const target = pendingAudioDevice || select.value;
+      if (target) select.value = target;
     }
 
     function updateSlotInfo(info) {

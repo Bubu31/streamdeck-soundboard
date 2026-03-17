@@ -8,6 +8,7 @@ declare class AudioPlayer {
     listDevices(): Promise<AudioDevice[]>;
     play(sound: SoundItem): Promise<void>;
     private buildFFplayArgs;
+    private buildPowerShellWinRTArgs;
     stop(soundId: string): void;
     stopAll(): void;
     private killProcess;

@@ -15,14 +15,22 @@ class AudioPlayer {
 
     try {
       if (process.platform === "win32") {
-        // Use PowerShell to list Windows sound devices (all active ones)
+        // Enumerate all active WASAPI audio render endpoints via PnP device manager.
+        // Win32_SoundDevice only lists WDM hardware devices and misses virtual endpoints
+        // (e.g. Elgato Wave Link channels: SFX, Music, Game, etc.)
+        // Render endpoints have InstanceId matching {0.0.0.* (vs capture = {0.0.1.*)
+        const psCmd = "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " +
+          "Get-PnpDevice -Class AudioEndpoint -Status OK | " +
+          "Where-Object { $_.InstanceId -like '*{0.0.0.*' } | " +
+          "Select-Object -ExpandProperty FriendlyName";
+
         const result = spawnSync("powershell.exe", [
           "-NoProfile",
           "-Command",
-          "(Get-CimInstance -Namespace root/cimv2 -ClassName Win32_SoundDevice).Name"
+          psCmd,
         ], {
           encoding: "utf-8",
-          timeout: 5000,
+          timeout: 10000,
         });
 
         const output = result.stdout || "";
@@ -63,13 +71,26 @@ class AudioPlayer {
 
     const settings = stateManager.getGlobalSettings();
     const effectiveVolume = sound.volume * settings.globalVolume;
+    const deviceId = settings.audioDevice;
 
-    const args = this.buildFFplayArgs(sound.path, effectiveVolume, settings.audioDevice);
+    let childProcess: ReturnType<typeof spawn>;
 
-    const childProcess = spawn(this.ffplayPath, args, {
-      stdio: ["ignore", "ignore", "ignore"],
-      detached: false,
-    });
+    if (deviceId !== "default" && process.platform === "win32") {
+      // ffplay does not support audio device selection in this build.
+      // Use PowerShell + WinRT Windows.Media.Playback.MediaPlayer instead,
+      // which supports WASAPI endpoint selection (e.g. Elgato Wave Link channels).
+      const args = this.buildPowerShellWinRTArgs(sound.path, effectiveVolume, deviceId);
+      childProcess = spawn("powershell.exe", args, {
+        stdio: ["ignore", "ignore", "ignore"],
+        detached: false,
+      });
+    } else {
+      const args = this.buildFFplayArgs(sound.path, effectiveVolume);
+      childProcess = spawn(this.ffplayPath, args, {
+        stdio: ["ignore", "ignore", "ignore"],
+        detached: false,
+      });
+    }
 
     const playingSound: PlayingSound = {
       soundId: sound.id,
@@ -89,20 +110,46 @@ class AudioPlayer {
     });
   }
 
-  private buildFFplayArgs(soundPath: string, volume: number, deviceId: string): string[] {
-    const args = [
+  private buildFFplayArgs(soundPath: string, volume: number): string[] {
+    return [
       "-nodisp",
       "-autoexit",
       "-loglevel", "quiet",
       "-volume", Math.round(volume * 100).toString(),
+      soundPath,
     ];
+  }
 
-    if (deviceId !== "default" && process.platform === "win32") {
-      args.push("-audio_device_name", deviceId);
-    }
+  private buildPowerShellWinRTArgs(soundPath: string, volume: number, deviceName: string): string[] {
+    // Escape single quotes for PowerShell single-quoted strings
+    const escapedDevice = deviceName.replace(/'/g, "''");
+    const escapedPath = soundPath.replace(/\\/g, "/").replace(/'/g, "''");
+    const vol = Math.min(1, Math.max(0, volume)).toFixed(4);
 
-    args.push(soundPath);
-    return args;
+    const script = [
+      "Add-Type -AssemblyName System.Runtime.InteropServices.WindowsRuntime",
+      "$null = [Windows.Media.Playback.MediaPlayer, Windows, ContentType=WindowsRuntime]",
+      "$null = [Windows.Devices.Enumeration.DeviceInformation, Windows, ContentType=WindowsRuntime]",
+      "$null = [Windows.Media.Core.MediaSource, Windows, ContentType=WindowsRuntime]",
+      "$null = [Windows.Media.Devices.MediaDevice, Windows, ContentType=WindowsRuntime]",
+      "function WA($op,$t){$m=[System.WindowsRuntimeSystemExtensions].GetMethods()|?{$_.Name -eq 'AsTask'-and $_.IsGenericMethod}|select -First 1;$x=$m.MakeGenericMethod($t).Invoke($null,@($op));$x.Wait()|Out-Null;$x.Result}",
+      "$sel=[Windows.Media.Devices.MediaDevice]::GetAudioRenderSelector()",
+      "$devs=WA ([Windows.Devices.Enumeration.DeviceInformation]::FindAllAsync($sel)) ([Windows.Devices.Enumeration.DeviceInformationCollection])",
+      `$dev=$devs|?{$_.Name -eq '${escapedDevice}'}|select -First 1`,
+      "if(-not $dev){exit 1}",
+      "$p=[Windows.Media.Playback.MediaPlayer]::new()",
+      `$p.Volume=${vol}`,
+      "$p.AudioDevice=$dev",
+      `$p.Source=[Windows.Media.Core.MediaSource]::CreateFromUri([Uri]::new('file:///${escapedPath}'))`,
+      "$p.Play()",
+      // Wait for playback to start (state leaves 0=None), max 5s
+      "$w=0;while($w -lt 100 -and $p.PlaybackSession.PlaybackState -eq 0){Start-Sleep -ms 50;$w++}",
+      // Wait for playback to finish: exit when state=None/Failed, OR position reached end of duration
+      "$e=0;while($e -lt 36000){$st=$p.PlaybackSession.PlaybackState;if($st -eq 0 -or $st -eq 5){break};$dur=$p.PlaybackSession.NaturalDuration.TotalMilliseconds;$pos=$p.PlaybackSession.Position.TotalMilliseconds;if($dur -gt 0 -and $pos -ge $dur-300){Start-Sleep -ms 400;break};Start-Sleep -ms 100;$e++}",
+      "$p.Dispose()",
+    ].join("; ");
+
+    return ["-NoProfile", "-NonInteractive", "-Command", script];
   }
 
   stop(soundId: string): void {
